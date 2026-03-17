@@ -1,0 +1,6 @@
+.gradle/
+app/build/
+!app/libs/README.md
+.idea/
+*.iml
+local.properties
