@@ -32,7 +32,7 @@
 │   ├── socketforapp.java                  # 接收手機 App 資料（需 Java 編譯執行）
 │   ├── client.py                          # 圖片傳送（目前未啟用）
 │   └── server.py                          # 圖片接收（目前未啟用）
-└── model/                                 # 歷史訓練結果參考
+└── model/                                 # 歷史訓練結果參考(https://drive.google.com/drive/folders/1pj0P5hZvEmF3WJqETP0xskZqOA6WRxk1?usp=sharing)
 ```
 
 ---
