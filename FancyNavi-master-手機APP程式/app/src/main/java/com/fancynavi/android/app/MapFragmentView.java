@@ -1253,8 +1253,8 @@ class MapFragmentView {
         keyguardManager = (KeyguardManager) DataHolder.getActivity().getSystemService(Context.KEYGUARD_SERVICE);
         MapEngine mapEngine = MapEngine.getInstance();
         ApplicationContext applicationContext = new ApplicationContext(activity);
-        applicationContext.setAppIdCode("MdgrnOU2OsdYuPbPNz2t", "jeXznopbGvE8KRhVK3wkMw");
-        applicationContext.setLicenseKey("UPTaWVOoRFajEFCEsbKeU90tlM+YxolaCWOX8pRWgNq9JVXegK83ohjN7ou/ix1kisqafUQ0/L1vTu0tXpN8V01n31OSmVp9ZWpWIILLc5sQTDKSewAMmmIoYAOd54Zf336wAuK9daZvrK3i4aDnHRrF0m81inch8cRxjTetOYWX4CFDyRXpsxbfvokFZTFoABIWs2GkBTBNXgwOS6o701o/5/ehvs9cjWttI/qSuUZAWD8wjEmtP0INaal6AlQpis5Bmm4cwl4z8qGM6gy2j+pZsEo9M41PAIgPwSDOgMdBqpUJwHjsN1uFEOCSYteAKBZXMX91JyPy670qc1jVBzv9EIDTnaleTr1xKJDDLhL7TmrJeXqMLiKPqjfcIXQhlwp4GIr5V4Hs9WF17aep49+YQgqr61WUZ5gPSGryeavV6zUMhZujZ9cXM0BPga+OHjuGgVk323XQBvOZhV9LQVx3FDpNbMk0NO4GhUfnQMxWKdVYygEN8EAUJw8e6gxDAMgxGy33wIWvKhZG1PTf/3DR/vyo1ywEQKftrdXCruf4mSVtzIB8DnPJvZ4vamxbf9vZQoT4DZbTYZxWiDlqws82GRQq687rek/mosA1Uq0nUgPMT4y9PpePuXQ78zVY3ttKF0wWpzh6jMSa6buBeKr/hszJlbqersym64V6cSU=");
+        applicationContext.setAppIdCode(BuildConfig.HERE_APP_ID, BuildConfig.HERE_APP_CODE);
+        applicationContext.setLicenseKey(BuildConfig.HERE_LICENSE_KEY);
         applicationContext.setMapVariant(MapEngine.MapVariant.GLOBAL);
         applicationContext.enableEnhancedMapMatcher(true);
         mapEngine.addMapDataDownloadListener(new MapEngine.OnMapDownloadListener() {
@@ -2535,7 +2535,7 @@ class MapFragmentView {
                     positionIndicator.setVisible(true);
                     trafficWarningTextView = DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view);
 
-                    roadkillGeoJSONTileLoader = new GeoJSONTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/ppwW5xZ4/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
+                    roadkillGeoJSONTileLoader = new GeoJSONTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/ppwW5xZ4/tile/web/%s_%s_%s?access_token=" + BuildConfig.HERE_XYZ_TOKEN + "&tags=");
                     roadkillGeoJsonTileMapContainer = new MapContainer();
                     DataHolder.getMap().addMapObject(roadkillGeoJsonTileMapContainer);
 

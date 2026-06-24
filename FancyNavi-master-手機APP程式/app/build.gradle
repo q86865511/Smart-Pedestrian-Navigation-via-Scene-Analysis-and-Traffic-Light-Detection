@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+// HERE XYZ Hub access token 由 local.properties（不進版控）或環境變數注入，
+// 避免把金鑰寫死在原始碼。設定方式見 README。
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def hereXyzToken = localProps.getProperty('here.xyz.token', System.getenv('HERE_XYZ_TOKEN') ?: '')
+def hereAppId = localProps.getProperty('here.app.id', System.getenv('HERE_APP_ID') ?: '')
+def hereAppCode = localProps.getProperty('here.app.code', System.getenv('HERE_APP_CODE') ?: '')
+def hereLicenseKey = localProps.getProperty('here.license.key', System.getenv('HERE_LICENSE_KEY') ?: '')
+
 android {
     compileSdkVersion 30
     splits {
@@ -19,6 +31,11 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+        // 透過 BuildConfig 取用，原始碼不再出現明文金鑰
+        buildConfigField "String", "HERE_XYZ_TOKEN", "\"${hereXyzToken}\""
+        buildConfigField "String", "HERE_APP_ID", "\"${hereAppId}\""
+        buildConfigField "String", "HERE_APP_CODE", "\"${hereAppCode}\""
+        buildConfigField "String", "HERE_LICENSE_KEY", "\"${hereLicenseKey}\""
     }
     dataBinding {
         enabled true
