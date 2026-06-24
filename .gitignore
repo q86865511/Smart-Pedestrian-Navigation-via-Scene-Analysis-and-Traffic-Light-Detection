@@ -1,0 +1,46 @@
+# ===== 金鑰 / 本機設定（切勿提交）=====
+local.properties
+*.keystore
+*.jks
+secrets.properties
+
+# ===== HERE SDK 二進位（授權限制，不可重新散布；請自行放入 app/libs）=====
+**/app/libs/*.aar
+**/app/libs/*.jar
+
+# ===== 模型 / 訓練輸出（請改用 release 或雲端下載）=====
+*.h5
+*.ckpt
+*.graph
+model.h5
+
+# ===== Android / Gradle =====
+.gradle/
+build/
+**/build/
+*.apk
+*.ap_
+*.dex
+captures/
+.cxx/
+
+# ===== Eclipse workspace 垃圾 =====
+.metadata/
+**/.metadata/
+.recommenders/
+bin/
+tmp/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ===== IDE / 系統 =====
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
