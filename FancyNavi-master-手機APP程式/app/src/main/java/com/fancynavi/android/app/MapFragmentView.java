@@ -1253,8 +1253,8 @@ class MapFragmentView {
         keyguardManager = (KeyguardManager) DataHolder.getActivity().getSystemService(Context.KEYGUARD_SERVICE);
         MapEngine mapEngine = MapEngine.getInstance();
         ApplicationContext applicationContext = new ApplicationContext(activity);
-        applicationContext.setAppIdCode("HERE_APP_ID_REDACTED", "HERE_APP_CODE_REDACTED");
-        applicationContext.setLicenseKey("HERE_LICENSE_KEY_REDACTED");
+        applicationContext.setAppIdCode(BuildConfig.HERE_APP_ID, BuildConfig.HERE_APP_CODE);
+        applicationContext.setLicenseKey(BuildConfig.HERE_LICENSE_KEY);
         applicationContext.setMapVariant(MapEngine.MapVariant.GLOBAL);
         applicationContext.enableEnhancedMapMatcher(true);
         mapEngine.addMapDataDownloadListener(new MapEngine.OnMapDownloadListener() {
@@ -2535,7 +2535,7 @@ class MapFragmentView {
                     positionIndicator.setVisible(true);
                     trafficWarningTextView = DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view);
 
-                    roadkillGeoJSONTileLoader = new GeoJSONTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/ppwW5xZ4/tile/web/%s_%s_%s?access_token=HERE_XYZ_TOKEN_REDACTED&tags=");
+                    roadkillGeoJSONTileLoader = new GeoJSONTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/ppwW5xZ4/tile/web/%s_%s_%s?access_token=" + BuildConfig.HERE_XYZ_TOKEN + "&tags=");
                     roadkillGeoJsonTileMapContainer = new MapContainer();
                     DataHolder.getMap().addMapObject(roadkillGeoJsonTileMapContainer);
 

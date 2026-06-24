@@ -57,15 +57,16 @@
 Developers should put application credentials here.To obtain them, please register the application
          at https://developer.here.com/develop/mobile-sdks
         -->
+        <!-- 請填入自己的 HERE SDK 憑證；原本外洩的明文金鑰已移除，務必至 HERE 後台 revoke 舊金鑰 -->
         <!--        <meta-data-->
         <!--            android:name="com.here.android.maps.appid"-->
-        <!--            android:value="HERE_APP_ID_REDACTED" />-->
+        <!--            android:value="YOUR_HERE_APP_ID" />-->
         <!--        <meta-data-->
         <!--            android:name="com.here.android.maps.apptoken"-->
-        <!--            android:value="HERE_APP_CODE_REDACTED" />-->
+        <!--            android:value="YOUR_HERE_APP_TOKEN" />-->
         <!--        <meta-data-->
         <!--            android:name="com.here.android.maps.license.key"-->
-        <!--            android:value="HERE_LICENSE_KEY_REDACTED" />-->
+        <!--            android:value="YOUR_HERE_LICENSE_KEY" />-->
         <!--
 Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.
