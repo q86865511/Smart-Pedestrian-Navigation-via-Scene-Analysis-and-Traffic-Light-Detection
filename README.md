@@ -73,7 +73,7 @@ flowchart LR
 ### 0. 取得程式碼
 
 ```bash
-git clone <本 repo 的 URL>   # TODO: 換成你的 repo URL
+git clone https://github.com/q86865511/Smart-Pedestrian-Navigation-via-Scene-Analysis-and-Traffic-Light-Detection.git
 cd Smart-Pedestrian-Navigation-via-Scene-Analysis-and-Traffic-Light-Detection
 ```
 
@@ -92,8 +92,14 @@ cd Smart-Pedestrian-Navigation-via-Scene-Analysis-and-Traffic-Light-Detection
 
 訓練資料夾 `Semantic-Segmentation-街景分析訓練/CamVid/` 與主程式 `Project-主程式/CamVid/` 內**僅附 `class_dict.csv`（類別與配色定義）**，不含影像資料。若要自行訓練，請下載 CamVid 資料集影像並放入對應資料夾：
 
-- CamVid 資料集：**TODO: 填入你使用的 CamVid 下載連結**
-- 補充資料集（本專題最終採 CamVid : 補充資料集 = 1:1 混合）：**TODO: 填入補充資料集連結（如有）**
+- **CamVid（Cambridge-driving Labeled Video Database）**：
+  - Kaggle 整理版（含影像與標註遮罩）：<https://www.kaggle.com/datasets/carlolepelaars/camvid>
+  - 原始學術來源（Cambridge）：<http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/>
+  - 本專案訓練框架沿用 [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite)，該 repo 亦附 11 類版本的 CamVid 可直接使用。
+- **補充資料集 = BDD100K 語意分割子集**（本專題最終採 CamVid : BDD = 1:1 混合；亦對應預設 checkpoint 路徑中的 `BDD-512-640`）：
+  - 官方下載（需註冊並同意授權）：<https://bdd-data.berkeley.edu/>
+  - 下載說明文件：<https://doc.bdd100k.com/download.html>（語意分割為其中的 `10K Images` + `Segmentation` 標註）
+  - ETH 鏡像：<https://dl.cv.ethz.ch/bdd100k/data/>
 
 > 若只是要跑主程式 inference，可不下載完整資料集，但需要預訓練模型（見下一步）。
 
@@ -101,7 +107,7 @@ cd Smart-Pedestrian-Navigation-via-Scene-Analysis-and-Traffic-Light-Detection
 
 模型權重（`*.ckpt` / `model.h5` 等）已依 `.gitignore` 排除於版控外。請從 Release 或雲端下載並放到主程式預期路徑：
 
-- 預訓練 checkpoint 下載：**TODO: 填入 Release 或雲端硬碟連結**
+- 預訓練 checkpoint 下載：本專案自行訓練的 FC-DenseNet103 權重未公開於版控。**請將你訓練好的權重上傳到本 repo 的 [GitHub Releases](https://github.com/q86865511/Smart-Pedestrian-Navigation-via-Scene-Analysis-and-Traffic-Light-Detection/releases) 或雲端硬碟，再把連結填於此處**；或依下方「訓練」步驟用 CamVid + BDD 自行重新訓練產生。
 - 預設路徑（`Main.py` 的 `--checkpoint_path` 預設值）：
   `Project-主程式/BDD-512-640/Checkpoint/latest_model_FC-DenseNet103_CamVid.ckpt`
 
