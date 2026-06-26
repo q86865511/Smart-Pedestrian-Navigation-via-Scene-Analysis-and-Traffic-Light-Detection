@@ -2,6 +2,8 @@
 
 > 一套整合「街景語意分割」「手勢辨識」「手機導航」三大模組的視障行人輔助導航專題：以 PC 端 Python（TensorFlow 1.x + MediaPipe）即時分析攝影機畫面，透過 Socket 與 Android 端 HERE 地圖 App 互通路線資訊，協助使用者判斷可行走區域與路口資訊。
 
+<p align="center"><img src="docs/cover.png" alt="結合街景分析與燈號辨識之智慧行人導航系統 — 封面" width="100%"></p>
+
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
 ![TensorFlow 1.x](https://img.shields.io/badge/TensorFlow-1.x_(compat.v1)-FF6F00?logo=tensorflow&logoColor=white)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-Hands-0097A7)
