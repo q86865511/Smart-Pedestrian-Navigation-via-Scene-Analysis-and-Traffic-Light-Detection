@@ -44,27 +44,7 @@
 
 ## 🏗️ 架構
 
-```mermaid
-flowchart LR
-    subgraph PC["PC 端 (Python, Project-主程式/Main.py)"]
-        CAM["攝影機 / 影片<br/>cv2.VideoCapture"] --> SEG["語意分割<br/>FC-DenseNet103<br/>(TensorFlow 1.x)"]
-        CAM --> GES["手勢辨識<br/>MediaPipe Hands<br/>(app.py)"]
-        SEG --> MARK["疊加標註與判斷<br/>marking.py<br/>(可行走區域 / 方向箭頭 / 路線資訊)"]
-        GES --> MARK
-        ROUTE["routePlan.txt<br/>(read_txt.py 讀取)"] --> MARK
-        MARK --> SHOW["即時顯示 + 語音提示<br/>cv2.imshow / stop.mp3"]
-    end
-
-    subgraph SRV["PC 端 Socket Server"]
-        JAVA["socketforapp.java<br/>(bind :7000)"] --> ROUTE
-    end
-
-    subgraph PHONE["Android 端 (FancyNavi, HERE SDK)"]
-        HERE["HERE Mobile SDK<br/>路線計算 / 地圖"] --> CLIENT["Socket Client<br/>MainActivity.java"]
-    end
-
-    CLIENT -- "TCP 路線字串<br/>dist~name~angle~ori~turn" --> JAVA
-```
+<p align="center"><img src="docs/architecture.svg" alt="智慧行人導航系統 系統架構" width="880"></p>
 
 > 資料流摘要：手機端用 HERE SDK 算路線 → 透過 Socket 把路線資訊傳到 PC 端寫入 `routePlan.txt` → PC 端主程式同時跑分割與手勢，並讀取最新路線資訊，全部疊加在同一張畫面上即時顯示。
 
