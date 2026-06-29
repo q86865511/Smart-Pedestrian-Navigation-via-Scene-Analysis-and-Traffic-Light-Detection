@@ -1,0 +1,27 @@
+name: CI
+
+# 最小守門。主程式相依(OpenCV / TensorFlow 1.x / MediaPipe / tf_slim)需 GPU 與
+# 舊版環境,無法在公開 CI runner 安裝,故這裡只做「零依賴的 Python 語法守門」:
+# 確認所有 .py 都能被 Python 解析(擋掉語法錯誤 / 壞掉的 commit)。
+# Android(FancyNavi)的 Gradle build 需 Android SDK + HERE SDK 授權二進位,亦不在此跑。
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  python-syntax:
+    name: Python 語法守門（py_compile）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: py_compile 所有 .py
+        run: |
+          python --version
+          find . -name '*.py' -not -path '*/build/*' -print0 | xargs -0 -n1 python -m py_compile
+          echo "All .py files compiled OK"
