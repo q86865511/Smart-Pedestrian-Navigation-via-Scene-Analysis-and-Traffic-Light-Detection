@@ -9,7 +9,7 @@
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-Hands-0097A7)
 ![Android](https://img.shields.io/badge/Android-API_26%2B-3DDC84?logo=android&logoColor=white)
 ![HERE SDK](https://img.shields.io/badge/HERE_Mobile_SDK-Premium_V3.x-00908A)
-![License](https://img.shields.io/badge/License-未指定-lightgrey)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 > ⚠️ **專題／研究用途說明**
 > 本專案為學生專題作品，僅供研究與展示。它**不是**通過驗證的輔具或醫療器材，**請勿**作為視障者實際出行的唯一依據。系統行為受模型準確度、攝影機角度、網路延遲等因素影響，使用風險由使用者自行承擔。
@@ -184,8 +184,9 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
 
 ## 🧪 測試
 
-- 本專案**尚無自動化測試**（待補）。
-- 子資料夾 `FancyNavi-master-手機APP程式/.github/workflows/build.yaml` 為上游 FancyNavi 帶入的 Android 建置工作流程；倉庫根層級沒有 CI，故本 README 未加 CI 徽章。
+- **CI 語法守門**：[`.github/workflows/ci.yml`](.github/workflows/ci.yml) 在每次 push / PR 對所有 `.py` 跑 `python -m py_compile`（零依賴的語法檢查）。主程式相依（OpenCV / TensorFlow 1.x / MediaPipe）需 GPU 與舊版環境,無法在公開 CI 安裝,故不在 CI 執行；Android Gradle build 需 Android SDK + HERE SDK 授權二進位,亦不在此跑。
+- 子資料夾 `FancyNavi-master-手機APP程式/.github/workflows/build.yaml` 為上游 FancyNavi 帶入的 Android 建置工作流程。
+- 尚無**功能/單元測試**(待補)。
 - 語意分割端可用 `Semantic-Segmentation-街景分析訓練/test.py`、`predict.py` 對既有模型做評估與單張預測（需自備資料集與 checkpoint）。
 
 ---
@@ -206,7 +207,8 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
 
 ### 授權
 
-- 本整合專題目前**未隨附 LICENSE 檔**，授權狀態未明確（badge 標為「未指定」）。**TODO: 補上你打算採用的授權條款，並注意需與下列上游專案授權相容。**
+- 本整合專題的**原創整合 / 串接程式碼**以 **MIT License** 釋出，詳見 [`LICENSE`](LICENSE)。
+- 但本專案**整合了多個上游元件**（下表），這些元件**各自保留其原始授權**；MIT 僅涵蓋本專案自寫的整合程式碼。使用前請務必同時遵守各上游授權（HERE SDK 二進位檔受授權限制、**不可重新散布**）。
 
 ### 第三方來源與素材
 
@@ -218,5 +220,8 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
 | 導航地圖 SDK | [HERE Mobile SDK for Android (Premium) V3.x](https://developer.here.com/) | 受授權限制，不隨附二進位檔，需自行下載 |
 | 圖示素材 | Flaticon（Vectors Market / Freepik / Smashicons / itim2101） | 沿用自 FancyNavi，詳見 `FancyNavi-master-手機APP程式/README.md` |
 | 資料集 | CamVid（及自行補充之資料集） | 影像未隨附，需自行取得 |
+| 中文字型 | [Taipei Sans TC Beta](https://github.com/ButTaiwan/tpsans) | `Project-主程式/marking.py` 以 PIL 繪製中文標註用；開源字型（免費可商用），隨附於 `Project-主程式/TaipeiSansTCBeta-Regular.ttf` |
+
+> 註：原本另隨附了一份**未被程式使用**的專有字型 `標楷體.ttf`（DFKai-SB，Windows 內建，~10MB），因有再散布授權疑慮且程式碼未引用，已自版控移除。
 
 > 使用本專案前，請務必遵守上述各上游專案與 HERE SDK 的授權條款；HERE SDK 二進位檔不可重新散布。
