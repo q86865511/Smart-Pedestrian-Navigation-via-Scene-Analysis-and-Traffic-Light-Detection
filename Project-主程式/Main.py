@@ -15,6 +15,9 @@ from utils import utils, helpers
 from builders import model_builder
 
 tf.compat.v1.disable_eager_execution()
+
+os.makedirs('output', exist_ok=True)    # 分割圖／手勢圖／routePlan.txt 都寫在這裡
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--inputVideo', type=str, default='no', required=False, help='The video you want to predict on. ')
 parser.add_argument('--image', type=str, default='output/output.jpg', required=False, help='The image you want to predict on. ')

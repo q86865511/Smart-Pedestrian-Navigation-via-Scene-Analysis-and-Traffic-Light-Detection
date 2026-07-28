@@ -1,6 +1,9 @@
 # 結合街景分析與燈號辨識之智慧行人導航系統
 
-> 一套整合「街景語意分割」「手勢辨識」「手機導航」三大模組的視障行人輔助導航專題：以 PC 端 Python（TensorFlow 1.x + MediaPipe）即時分析攝影機畫面，透過 Socket 與 Android 端 HERE 地圖 App 互通路線資訊，協助使用者判斷可行走區域與路口資訊。
+> ⚠️ **關於標題中的「燈號辨識」**
+> **燈號辨識（Traffic Light Detection）為原規劃項目，最終版本未實作。** 本 repo 名稱與標題沿用當初的專題題目；實際完成的是「街景語意分割 ＋ 手勢辨識 ＋ 手機導航」三模組整合。程式碼中僅殘留 `CamVid/class_dict.csv` 的 `TrafficLight` 類別定義與 `marking.py` 一行未啟用的顯示程式碼，**沒有任何紅／綠燈判斷邏輯**。詳見「已知限制」。
+
+> 一套整合「街景語意分割」「手勢辨識」「手機導航」三大模組的視障行人輔助導航專題：以 PC 端 Python（TensorFlow 1.x + MediaPipe）分析攝影機畫面，透過 Socket 與 Android 端 HERE 地圖 App 互通路線資訊，協助使用者判斷可行走區域與路口資訊。三個模組以檔案與 Socket 鬆耦合串接，屬**原型管線**（非最佳化的即時系統，實測畫面處理速度遠低於即時要求）。
 
 <p align="center"><img src="docs/cover.png" alt="結合街景分析與燈號辨識之智慧行人導航系統 — 封面" width="100%"></p>
 
@@ -24,7 +27,7 @@
 - **手勢辨識**：用 MediaPipe 偵測手部關鍵點，當偵測到「張開手掌（Open）」時輸出 `Stop` 訊號（情境上對應「攔公車／停止」），並播放語音提示。
 - **手機導航**：Android 端基於開源專案 **FancyNavi**（HERE Mobile SDK）計算路線，將「距離、路名、轉彎角度、方位、下一個轉向」等資訊透過 TCP Socket 傳到 PC 端，疊加在分割結果畫面上。
 
-三個模組由 PC 端主程式 `Project-主程式/Main.py` 整合：每隔數幀擷取一張畫面 → 跑分割 → 跑手勢 → 讀取手機傳來的最新路線資訊 → 合成標註後即時顯示。
+三個模組由 PC 端主程式 `Project-主程式/Main.py` 整合：每隔數幀擷取一張畫面 → 跑分割 → 跑手勢 → 讀取手機傳來的最新路線資訊 → 合成標註後顯示。此為原型管線，各階段耗時未經最佳化。
 
 > 本 README 為**整個 repo 的單一入口**，串起以下三個（含工具共四個）子資料夾。各子資料夾沿用其上游專案的程式碼結構。
 
@@ -35,8 +38,8 @@
 - **三模組異質整合**：把 TensorFlow 語意分割、MediaPipe 手勢、Android HERE 導航三套技術用「檔案 + Socket」鬆耦合地接在一起，PC 與手機各司其職。
 - **可行走區域判斷**：`marking.py` 對分割輸出的「道路」色塊（RGB `128,64,128`）做 BFS 連通區域分析，計算面積與重心；以畫面底部中央是否落在道路色塊、且面積大於門檻（300 px）來判斷「是否站在路面上」。
 - **方向箭頭疊加**：依手機端回傳的轉彎角度，把 `arrow.png` 旋轉後貼到道路重心位置，於畫面上指示前進方向。
-- **手勢即時提示**：手勢分類結果寫入文字檔，偵測到 `Open` 時輸出 `Stop` 並以 `playsound` 播放 `stop.mp3` 語音（語音檔可由 gTTS 產生）。
-- **跨裝置通訊**：Android App 作為 client 連到 PC 端 server，路線資訊以 `~` 分隔字串傳輸並追加寫入 `output/routePlan.txt`；PC 端提供 Java（`socketforapp.java`，效能較佳）與 Python（`server.py`）兩種接收實作。
+- **手勢語音提示**：手勢分類結果寫入文字檔，偵測到 `Open` 時輸出 `Stop` 並以 `playsound` 播放 `stop.mp3` 語音（語音檔可由 gTTS 產生）。
+- **跨裝置通訊**：Android App 作為 client 連到 PC 端 server（`socketforapp.java`），路線資訊以 `~` 分隔字串、`\n` 作為記錄結尾傳輸，Server 端以累積緩衝切行後（UTF-8）追加寫入 `output/routePlan.txt`。
 - **可自訂語意標籤配色**：附 `change_color` 工具，依 `setting.txt` 的「原始 RGB → 目標 RGB」對照批次替換資料集標註圖配色，方便混用不同來源的標註資料。
 - **金鑰外部化**：HERE App ID／Code／License／XYZ Token 一律經 `local.properties`（不進版控）於編譯期由 `BuildConfig` 注入，原始碼不含明文金鑰；HERE SDK 二進位檔亦排除於版控外。
 
@@ -46,7 +49,7 @@
 
 <p align="center"><img src="docs/architecture.svg" alt="智慧行人導航系統 系統架構" width="880"></p>
 
-> 資料流摘要：手機端用 HERE SDK 算路線 → 透過 Socket 把路線資訊傳到 PC 端寫入 `routePlan.txt` → PC 端主程式同時跑分割與手勢，並讀取最新路線資訊，全部疊加在同一張畫面上即時顯示。
+> 資料流摘要：手機端用 HERE SDK 算路線 → 透過 Socket 把路線資訊傳到 PC 端寫入 `routePlan.txt` → PC 端主程式同時跑分割與手勢，並讀取最新路線資訊，全部疊加在同一張畫面上顯示（原型管線，非即時最佳化）。
 
 ---
 
@@ -120,16 +123,31 @@ python a.py ex/      # 處理 ex/ 資料夾內所有 .png/.jpg，結果輸出到
 
 ### 5. 啟動 PC 端 Socket Server（接收手機路線資訊）
 
-在 `Project-主程式/` 內，用 Java 執行 `socketforapp.java`（會監聽埠 `7000`，並把收到的路線字串追加寫入 `output/routePlan.txt`）：
+在 `Project-主程式/` 內，用 Java 執行 `socketforapp.java`（預設監聽 `0.0.0.0:7000`，並把收到的路線字串追加寫入 `output/routePlan.txt`）：
 
 ```bash
 cd Project-主程式
-javac socketforapp.java
-java socket.socketforapp
+javac -d . socketforapp.java
+java socket.socketforapp                 # 預設 0.0.0.0:7000，聽所有網路介面
+java socket.socketforapp 192.168.71.199 7000   # 或以參數指定監聽位址／埠
 ```
 
-> `socketforapp.java` 內的監聽 IP（預設 `192.168.71.199`）需改成**執行主程式電腦**的實際 IP。
-> 另提供純 Python 版接收程式 `server.py`（效能較慢）；`client.py` / `server.py` 的圖片傳送功能目前未啟用。
+> 監聽位址／埠可用命令列參數，或環境變數 `ROUTE_SERVER_HOST` / `ROUTE_SERVER_PORT` 指定；
+> 預設 `0.0.0.0` 表示不必為換網段而改程式碼。`output/` 若不存在會自動建立。
+
+**路線字串格式（PC 與 Android 兩端的單一真相來源）**：欄位以 `~` 分隔、每筆記錄以 `\n` 結尾、編碼 UTF-8。
+
+| # | 欄位 | 型別 | 來源（Android 端 `MapFragmentView.java`） | 範例 |
+|---|------|------|------|------|
+| 1 | 距離 | int（公尺） | `guidanceManeuverData.getDistance()` | `250` |
+| 2 | 下一個路名 | string（可能含逗號，故不用 `,` 當分隔） | `guidanceManeuverData.getInfo2()` | `中山北路一段` |
+| 3 | 轉彎角度 | int（度） | `getNextManeuver().getAngle()` | `90` |
+| 4 | 方位 | int（度） | `getNextManeuver().getMapOrientation()` | `180` |
+| 5 | 轉向 | string（`END` 表示抵達終點） | `getNextManeuver().getIcon().name()` | `TURN_LEFT` |
+
+完整一筆：`250~中山北路一段~90~180~TURN_LEFT\n`；PC 端由 `read_txt.Recent_info()` 解析（格式不符時回傳 `None`，不會中斷主迴圈）。
+
+> `server.py` 是**另一支用途不同的程式**：綁 port `1234` 接收 `client.py` 傳來的圖片檔並呼叫 `handGestrueandMark.hand()`，與這裡的路線字串通道無關（監聽位址／埠可用 `IMG_SERVER_HOST` / `IMG_SERVER_PORT` 環境變數指定）。
 
 ### 6. 執行整合主程式
 
@@ -173,10 +191,10 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
    這些值會於編譯期透過 `BuildConfig` 注入，原始碼不含明文金鑰。
 3. **設定連線目標（指向跑主程式的電腦）**：編輯
    `app/src/main/java/com/fancynavi/android/app/MainActivity.java`
-   - 第 **267** 行：`InetAddress.getByName("...")` 的 IP
-   - 第 **269** 行：`int serverPort = 7000;` 的 Port
+   - 第 **269** 行：`InetAddress.getByName("...")` 的 IP → 改成跑主程式那台電腦的實際 IP
+   - 第 **271** 行：`int serverPort = 7000;` 的 Port
 
-   並確認與 PC 端 `socketforapp.java` 的 IP／Port 一致。
+   PC 端 `socketforapp.java` 預設聽 `0.0.0.0`，只要 Port 一致即可（不需再改 PC 端 IP）。
 
 > ⚠️ 若你 fork 自舊版本：舊 commit 可能曾含明文金鑰，請務必到 HERE 後台 **revoke** 那些舊金鑰。
 
@@ -186,7 +204,16 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
 
 - **CI 語法守門**：[`.github/workflows/ci.yml`](.github/workflows/ci.yml) 在每次 push / PR 對所有 `.py` 跑 `python -m py_compile`（零依賴的語法檢查）。主程式相依（OpenCV / TensorFlow 1.x / MediaPipe）需 GPU 與舊版環境,無法在公開 CI 安裝,故不在 CI 執行；Android Gradle build 需 Android SDK + HERE SDK 授權二進位,亦不在此跑。
 - 子資料夾 `FancyNavi-master-手機APP程式/.github/workflows/build.yaml` 為上游 FancyNavi 帶入的 Android 建置工作流程。
-- 尚無**功能/單元測試**(待補)。
+- **單元測試**（只需 `pytest` 與 `Pillow`，不需 GPU／TensorFlow／MediaPipe）：
+
+  ```bash
+  cd Project-主程式
+  python -m pytest tests -q
+  ```
+
+  涵蓋 `read_txt.Recent_info()` 的失效行為（正常、最後一行無換行、空檔、缺檔、逗號舊格式、欄位數不符）
+  與 `marking.analyzeRegions()` 的連通區域分析（面積門檻、底部中央判定、多區塊）。
+- Android 端與 `socketforapp.java` 需 Android SDK／JDK，未納入上述測試。
 - 語意分割端可用 `Semantic-Segmentation-街景分析訓練/test.py`、`predict.py` 對既有模型做評估與單張預測（需自備資料集與 checkpoint）。
 
 ---
@@ -194,7 +221,9 @@ App 位於 `FancyNavi-master-手機APP程式/`，以 Android Studio 開啟（`mi
 ## ⚠️ 已知限制
 
 - **TensorFlow 1.x 已 EOL**：程式以 `tensorflow.compat.v1`（含 `disable_eager_execution`）與 `tf_slim` 撰寫，僅相容 TF 1.x 生態。TF 1.x 已停止維護，於新版 Python／CUDA 環境安裝困難，建議使用對應的舊版環境或容器。
-- **硬編碼 IP／Port**：PC 端 `socketforapp.java` 與 Android 端 `MainActivity.java` 的連線位址寫死在原始碼（埠 `7000`），換網路環境須手動修改兩端並重新編譯。
+- **燈號辨識未實作**：燈號辨識為原始規劃項目，最終未完成實作。程式中沒有任何讀取燈號類別、判斷紅／綠燈或發出提示的邏輯；只剩兩處痕跡——`CamVid/class_dict.csv` 保留的 `TrafficLight` 類別定義，以及 `marking.py` 一行被註解掉的燈號顯示程式碼。若要接續開發，最直接的路徑是從分割輸出的 `TrafficLight` 類別區域再做顏色判斷。
+- **Android 端連線位址仍需手改**：PC 端 `socketforapp.java` 已可用參數／環境變數指定監聽位址（預設 `0.0.0.0`），但 Android 端 `MainActivity.java` 的目標 IP 仍寫死在原始碼，換網路環境須修改並重新編譯 App。
+- **效能未達即時**：`marking.py` 的連通區域分析仍是 Python 逐像素 BFS；以 640×480 模擬分割圖實測，原本每幀三次 BFS 約 0.24 秒，合併為一次後約 0.10 秒——仍遠低於即時要求，且尚未計入 FC-DenseNet103 推論。要真正即時需改用 `cv2.connectedComponentsWithStats` 向量化。
 - **同網段需求**：手機與 PC 需在可互通的區域網路內，且 PC 端防火牆需開放對應埠。
 - **HERE SDK 為付費／受授權限制**：需自行申請 HERE Premium SDK 評估授權與憑證；HERE Mobile SDK（Premium）V3.x 為較舊版本。
 - **資料集與模型未隨附**：CamVid 影像、補充資料集與訓練好的 checkpoint 皆需另行下載（見快速開始）。

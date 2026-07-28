@@ -79,12 +79,14 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -262,22 +264,31 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             // TODO Auto-generated method stub
+            //這個 Runnable 會被多條執行緒同時跑,連線物件一律用區域變數,避免彼此覆蓋
+            Socket socket = null;
+            BufferedWriter writer = null;
+            BufferedReader reader = null;
+            String dataTmp = tmp;
             try {
                 //輸入 Server 端的 IP
-                InetAddress serverIp = InetAddress.getByName("192.168.71.217");
+                InetAddress serverIp = InetAddress.getByName("192.168.71.199");
                 //自訂所使用的 Port(1024 ~ 65535)
                 int serverPort = 7000;
                 //建立連線
-                clientSocket = new Socket(serverIp, serverPort);
-                //取得網路輸出串流
-                bw = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                socket = new Socket(serverIp, serverPort);
+                //取得網路輸出串流(明定 UTF-8，與 PC 端讀取編碼一致)
+                writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
                 //取得網路輸入串流
-                br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                clientSocket = socket;  //保留給 onDestroy 參考
+                bw = writer;
+                br = reader;
 
                 //檢查是否已連線
-                if (clientSocket.isConnected()) {
-                    bw.write(tmp);
-                    bw.flush();
+                if (socket.isConnected()) {
+                    //換行當作記錄結束，讓 Server 端能切出完整的一筆
+                    writer.write(dataTmp + "\n");
+                    writer.flush();
                     //宣告一個緩衝,從br串流讀取 Server 端傳來的訊息
                     /*
                     tmp = br.readLine();
@@ -291,9 +302,23 @@ public class MainActivity extends AppCompatActivity {
                 //當斷線時會跳到 catch,可以在這裡處理斷開連線後的邏輯
                 e.printStackTrace();
                 Log.e("EEERROR", "Socket連線=" + e.toString());
+            } finally {
+                //導航中每次距離變動都會開一條連線,不關會累積大量未釋放的 socket 與執行緒
+                closeQuietly(writer);
+                closeQuietly(reader);
+                closeQuietly(socket);
             }
         }
     };
+
+    private static void closeQuietly(Closeable closeable) {
+        if (closeable == null) return;
+        try {
+            closeable.close();
+        } catch (IOException e) {
+            Log.e("EEERROR", "Socket關閉=" + e.toString());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

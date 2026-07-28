@@ -1,13 +1,16 @@
 # -*- coding: utf8 -*-
 
+import os
 import socket
 import handGestrueandMark
 
-host = '192.168.71.199'  # 對server端為主機位置
-port = 1234
+host = os.environ.get( 'IMG_SERVER_HOST', '0.0.0.0' )  # 對server端為主機位置，預設聽所有介面
+port = int( os.environ.get( 'IMG_SERVER_PORT', '1234' ) )
 # host = socket.gethostname()
 # port = 5000
 address = (host, port)
+
+os.makedirs('output', exist_ok=True)  # 收到的圖片寫在這裡
 
 socket01 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # AF_INET:默認IPv4, SOCK_STREAM:TCP
@@ -48,8 +51,8 @@ while True :
         fileNameFlag = ( fileNameFlag + 1 ) % 2
     except KeyboardInterrupt :
         break
-    except :
-        print( 'Error' )
+    except Exception as error :
+        print( 'Error : %s'%error )
 ##################################################
 
     

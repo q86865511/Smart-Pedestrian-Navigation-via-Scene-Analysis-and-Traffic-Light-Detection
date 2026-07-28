@@ -39,27 +39,33 @@ def get_args():
     return args
 
 
-def main():
-    # Argument parsing #################################################################
-    #args = get_args()
+# Model / label resources are built once and reused ##########################
+# (main() is called once per frame by Main.py; rebuilding MediaPipe Hands and
+#  the two TFLite interpreters every frame was both slow and cleared the
+#  histories below, which made the point history classifier dead code.)
+use_static_image_mode = False
+min_detection_confidence = 0.7
+min_tracking_confidence = 0.5
 
-    # cap_device = args.device
-    # cap_width = args.width
-    # cap_height = args.height
+hands = None
+keypoint_classifier = None
+point_history_classifier = None
+keypoint_classifier_labels = None
+point_history_classifier_labels = None
+cvFpsCalc = None
 
-    use_static_image_mode = False
-    #args.use_static_image_mode
-    min_detection_confidence = 0.7
-    #args.min_detection_confidence
-    min_tracking_confidence = 0.5
-    #args.min_tracking_confidence
+# Coordinate history / Finger gesture history ################################
+history_length = 16
+point_history = deque(maxlen=history_length)
+finger_gesture_history = deque(maxlen=history_length)
 
-    use_brect = True
 
-    # # Camera preparation ###############################################################
-    # #cap = cv.VideoCapture(cap_device)
-    # cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-    # cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+def load_resources():
+    global hands, keypoint_classifier, point_history_classifier
+    global keypoint_classifier_labels, point_history_classifier_labels, cvFpsCalc
+
+    if hands is not None:
+        return
 
     # Model load #############################################################
     mp_hands = mp.solutions.hands
@@ -92,16 +98,27 @@ def main():
     # FPS Measurement ########################################################
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
-    # Coordinate history #################################################################
-    history_length = 16
-    point_history = deque(maxlen=history_length)
 
-    # Finger gesture history ################################################
-    finger_gesture_history = deque(maxlen=history_length)
+def main():
+    # Argument parsing #################################################################
+    #args = get_args()
+
+    # cap_device = args.device
+    # cap_width = args.width
+    # cap_height = args.height
+
+    use_brect = True
+
+    # # Camera preparation ###############################################################
+    # #cap = cv.VideoCapture(cap_device)
+    # cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
+    # cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+
+    load_resources()
 
     #  ########################################################################
     mode = 0
-    
+
     sameGesture = 0
     #while True:
     #fps = cvFpsCalc.get()

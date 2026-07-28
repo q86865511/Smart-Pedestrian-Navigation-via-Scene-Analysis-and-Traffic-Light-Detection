@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import sys
-from queue import Queue
+from collections import deque
 import cv2
 import numpy as np
 
@@ -13,18 +13,35 @@ circleRadius = 5
 centerColors = [(0,255,0)]
 smallCircleRadius = 0
 
-def drawCenter(img):
+def analyzeRegions(img):
+    """一次掃描算出所有目標色連通區域（重心、面積），並找出畫面底部中央所屬區域。
+
+    回傳 ( regions, floorRegion )：regions 為 [(色號, 重心, 面積), ...]，
+    floorRegion 為底部中央那塊的 (重心, 面積)，不在目標色上時為 None。
+    原本 judgeFloor / drawCenter / drawArrow 各跑一次 BFS，共用本結果只需跑一次。
+    """
     pix = img.load()
     w,h = img.size
     vis = [[False for i in range(h)] for j in range(w) ]
+    fx, fy = w//2, h-1
+    regions = []
+    floorRegion = None
     for i in range(w):
         for j in range(h):
             if vis[i][j]: continue;
             for t in range( len( targetColors ) ):
                 if pix[i,j] != targetColors[t]: continue
+                floorWasVisited = vis[fx][fy]
                 pos, area = calcCenterPos( img, (i,j), vis )
-                if area >= thresholdPixel:
-                    drawCircle( img, pos, circleRadius, centerColors[t] )
+                regions.append( (t, pos, area) )
+                if not floorWasVisited and vis[fx][fy]: floorRegion = ( pos, area )
+    return regions, floorRegion
+
+def drawCenter(img, regions = None):
+    if regions == None: regions, _ = analyzeRegions( img )
+    for t, pos, area in regions:
+        if area >= thresholdPixel:
+            drawCircle( img, pos, circleRadius, centerColors[t] )
 
 def drawCircle(img, pos, radius, color ):
     w,h = img.size
@@ -50,26 +67,28 @@ def drawEdge(img):
                 drawCircle( img, *temp, smallCircleRadius, centerColors[t] )
                 if j < h: drawCircle( img,i,j,smallCircleRadius, centerColors[t] )
 
-def judgeFloor(img):
-    pix = img.load()
-    w,h = img.size
-    if pix[w//2, h-1] != targetColors[0]: return False
-    _, area = calcCenterPos( img, (w//2, h-1) )
+def judgeFloor(img, floorRegion = None):
+    if floorRegion == None:
+        pix = img.load()
+        w,h = img.size
+        if pix[w//2, h-1] != targetColors[0]: return False
+        floorRegion = calcCenterPos( img, (w//2, h-1) )
+    _, area = floorRegion
     return area >= thresholdPixel
 
-def calcCenterPos(img, pos, vis = None): 
+def calcCenterPos(img, pos, vis = None):
     pix = img.load()
     w,h = img.size
     clr = pix[pos]
-    q = Queue()
-    q.put( pos )
+    q = deque()                 # 單執行緒 BFS 不需要 queue.Queue 的鎖
+    q.append( pos )
     if vis == None: vis = [[False for i in range(h)] for j in range(w) ]
     vis[pos[0]][pos[1]] = True
     sumw = 0
     sumh = 0
     sump = 0
-    while q.qsize():
-        x,y = q.get()
+    while q:
+        x,y = q.popleft()
         sumw += x
         sumh += y
         sump += 1
@@ -77,17 +96,18 @@ def calcCenterPos(img, pos, vis = None):
             nx = x+dx[k]
             ny = y+dy[k]
             if nx >= 0 and ny >= 0 and nx < w and ny < h and not vis[nx][ny] and pix[nx,ny] == clr :
-                q.put( (nx,ny ) )
+                q.append( (nx,ny ) )
                 vis[nx][ny] = True
     return ( sumw // sump, sumh // sump ), sump
 
 arrowImg = Image.open("arrow.png").convert('RGBA').resize( (50,50) )
-def drawArrow(img, angle):
+def drawArrow(img, angle, floorRegion = None):
     pix = img.load()
     # print(angle)
     rotatedArrowImg = arrowImg.rotate( angle )
     w,h = img.size
-    if pix[w//2, h-1] == targetColors[0]: pos, _ = calcCenterPos(img, (w//2, h-1) )
+    if floorRegion != None: pos, _ = floorRegion
+    elif pix[w//2, h-1] == targetColors[0]: pos, _ = calcCenterPos(img, (w//2, h-1) )
     else: pos = ( w//2, h-1 )
     centerPos = ( pos[0] - arrowImg.size[0] // 2, pos[1] - arrowImg.size[1] // 2 )
     offsetPos = ( centerPos[0], centerPos[1] - 25 )
@@ -95,12 +115,21 @@ def drawArrow(img, angle):
 
 
 fontSize = 24
+markFont = None
+def getFont():
+    global markFont       # 字型只從磁碟載入一次，不必每幀 truetype
+    if markFont == None: markFont = ImageFont.truetype( 'TaipeiSansTCBeta-Regular.ttf', fontSize )
+    return markFont
+
 def drawInfo( img, dist, name, turn, ori, is_walkable, info ):
 
     draw = ImageDraw.Draw( img )
-    font = ImageFont.truetype( 'TaipeiSansTCBeta-Regular.ttf', fontSize )
+    font = getFont()
     if name == 'null' : name = 'The Road has no name'
-    if dist <= 15 and turn != 'END' :
+    if dist == None :   # 手機端路線資訊尚未送達或格式不符
+        draw.text( (5,5), "Waiting for route information", font = font, align = 'left' )
+
+    elif dist <= 15 and turn != 'END' :
         draw.text( (5,5), "This Road is head to %d°"%ori, font = font, align = 'left' )
         draw.text( (5,30), "Distance %dm"%dist, font = font, align = 'left' )
         draw.text( (5,55), "Next Road's Name : %s"%name, font = font, align = 'left' )
@@ -131,15 +160,20 @@ import read_txt as rt
 def drawAndSave(img, info):
     img = img[:,:,::-1]
     img = Image.fromarray(img)
-    is_walkable = judgeFloor(img)
-    drawCenter( img )
+    regions, floorRegion = analyzeRegions( img )    # 三處共用同一次連通區域分析
+    is_walkable = judgeFloor( img, floorRegion )
+    drawCenter( img, regions )
 
-    dist, name, angel, ori, turn = rt.Recent_info() #read navigation informations
-    
-    if dist <= 15 and turn != 'END' :
-        drawArrow(img, angel)
+    route = rt.Recent_info() #read navigation informations
+    if route == None :
+        dist, name, angel, ori, turn = None, 'null', 0, 0, 'UNKNOWN'
     else :
-        drawArrow(img, 0)
+        dist, name, angel, ori, turn = route
+
+    if dist != None and dist <= 15 and turn != 'END' :
+        drawArrow(img, angel, floorRegion)
+    else :
+        drawArrow(img, 0, floorRegion)
 
     drawInfo( img, dist, name, turn, ori, is_walkable, info )
     img.save("output/output_pred_marked.png")
@@ -149,7 +183,11 @@ def drawAndSave(img, info):
                  
         
 def test():
-    drawAndSave( sys.argv[1], "" )
+    img = cv2.imread( sys.argv[1] )     # drawAndSave 收的是 numpy array，不是路徑
+    if img is None :
+        print( "Cannot read image %s"%sys.argv[1] )
+        return
+    drawAndSave( img, "" )
 
 if __name__ == '__main__':
     test()

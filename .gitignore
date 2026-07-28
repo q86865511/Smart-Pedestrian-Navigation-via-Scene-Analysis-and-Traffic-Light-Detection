@@ -31,6 +31,12 @@ captures/
 bin/
 tmp/
 
+# ===== Java 編譯產物 =====
+*.class
+
+# ===== 執行時輸出（分割圖／手勢圖／routePlan.txt，執行時自動建立）=====
+Project-主程式/output/
+
 # ===== Python =====
 __pycache__/
 *.py[cod]

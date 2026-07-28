@@ -1462,8 +1462,9 @@ class MapFragmentView {
                     Context context = MainActivity.getAppContext();
                     try {
 
-                        String dataTmp = guidanceManeuverData.getDistance() + "," + guidanceManeuverData.getInfo2() + "," + navigationManager.getNextManeuver().getAngle() + "," +
-                                        navigationManager.getNextManeuver().getMapOrientation() + "," + navigationManager.getNextManeuver().getIcon().name();
+                        // 欄位分隔符固定用 "~"（路名可能含逗號），與 PC 端 read_txt.py 的 split('~') 一致
+                        String dataTmp = guidanceManeuverData.getDistance() + "~" + guidanceManeuverData.getInfo2() + "~" + navigationManager.getNextManeuver().getAngle() + "~" +
+                                        navigationManager.getNextManeuver().getMapOrientation() + "~" + navigationManager.getNextManeuver().getIcon().name();
 /*
                         if ( guidanceManeuverData.getDistance() <= 3 )
                             dataTmp = dataTmp + "\n\nYou are about to reach a turning intersection,\nplease turn " + navigationManager.getNextManeuver().getAngle()
